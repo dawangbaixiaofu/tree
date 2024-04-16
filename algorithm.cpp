@@ -1,8 +1,12 @@
 #include <iostream>
 #include <random>
+#include <stack>
+#include <math.h>
+
 
 using namespace std;
 
+////////////////////////////////////////////////////////////////
 template<typename T>
 void swap(T&, T&);
 
@@ -23,7 +27,235 @@ void generate_feature(T*, int);
 template<typename T>
 void print(T*, int);
 
+
+
+// interface for building a tree
+struct node{
+    float threshold;
+    float impurity;
+    int feature;
+    node* left = nullptr;
+    node* right = nullptr;
+};
+
+struct StackRecord{
+    int parent;
+    bool is_left;
+    int start;
+    int end;
+    int depth;
+    float impurity;
+    
+
+};
+
+struct SplitRecord{
+    int feature;
+    int pos;
+    float threshold;
+    float improvement;
+    float impurity_left;
+    float impurity_right;
+
+};
+
+class object{
+    // matrix 
+};
+
+class DepthFirstTreeBuild{
+    public:
+    int node_count = 0;
+    int capacity = 2047;
+    node* nodes = new node[capacity];
+    int node_count = 0;
+
+    SplitRecord split;
+    
+    int tree_leaf = -1;
+    int tree_undefined = -2;
+    int* samples;
+    
+
+    object X;
+    float* y;
+    
+    void build();
+    int add_node();
+    void node_split(StackRecord* record, SplitRecord* split, float impurity);
+    float node_impurity(int* samples, int start, int end);
+    void bfs();
+    void dfs();
+};
+
+
 /////////////////////////////////////////////////////////////
+
+void DepthFirstTreeBuild::node_split(StackRecord* record, SplitRecord* split, float impurity){
+    // find a best feature and corresponding threshold
+    int n_features;
+    int* features; // 0, 1, 2, ..., n_features-1
+    
+
+    int start = record->start;
+    int end = record->end;
+    float impurity = record->impurity;
+    int random_subscript;
+    int n_samples = (end-start);
+    float feature_values[n_samples][n_features];
+    int* samples = new int[n_samples];
+
+    SplitRecord best_record;
+
+
+    random_device sd;
+    mt19937 gen(sd());
+    // shuffle features 
+    for(int i=n_features-1; i>0; i--){
+        uniform_int_distribution<> dist(0, i);
+        random_subscript = dist(gen);
+        ::swap<int>(features[i], features[random_subscript]);
+        // generate features 
+
+        // sort feature and samples
+
+
+        // search best threshold
+
+
+    }   
+
+
+
+}
+
+
+
+
+float DepthFirstTreeBuild::node_impurity(int* samples, int start, int end){
+    // caculate impurity
+    float impurity;
+    int n_outputs;
+    int n_classes;
+    int n_node_samples = (end-start);
+    float sum_total[n_outputs][n_classes]; // 二维数组
+    
+    int c;
+    float count_k;
+
+
+    for(int i = start; i<end; i++){
+        int index = samples[i];
+        for(int k=0; k<n_outputs; k++){
+            c = y[index, k];
+            sum_total[k][c] += 1;
+        }
+    }
+
+    for(int k=0; k<n_outputs; k++){
+        for(int c=0; c<n_classes; c++){
+            count_k = sum_total[k][c];
+            if(count_k>0.0){
+                count_k /= n_node_samples;
+                impurity -= count_k*log(count_k);
+            }
+        }
+    }
+    impurity /= n_outputs;
+    return impurity;
+}
+
+
+
+void DepthFirstTreeBuild::build(){
+    int dim0 = 100;
+    int* samples;
+    StackRecord record;
+
+    // local var needed 
+    float impurity;
+    bool first = 1;
+    bool is_leaf = 0;
+    float EPSILON = 1.1920929e-07;
+    float min_impurity_decrease = 0.01;
+
+
+    
+    stack<StackRecord> build_stack;
+    build_stack.push({
+        parent:tree_undefined,
+        is_left:0,
+        start:0,
+        end:dim0,
+        impurity:INFINITY
+    }
+    );
+    
+
+    while(!build_stack.empty()){
+        record = build_stack.top();
+        
+
+        build_stack.pop();  
+        // 1. current node whether is leaf node
+        // current node samples, depth, 2*min_samples_leaf
+
+        // root node 
+        if(first){
+            impurity = node_impurity(samples, record.start, record.end);
+            first = 0;
+        }
+        else{
+            impurity = record.impurity;
+        }
+
+        // 2. current node whether is leaf node
+        // impurity < EPSILON
+        is_leaf = (is_leaf or impurity < EPSILON);
+        if(!is_leaf){
+            // node split 
+            node_split(&record, &split, impurity);
+
+            // 3. current node whether is leaf node 
+            // split.pos >= end or split.improvement + EPSILON < min_impurity_decrease
+
+        }
+
+        // add current node to tree, and return current node id
+        // caculate current node id
+        // if parent is undefined, then current node is root node
+        // if parent exists, and is_left is true, then current node is nodes[parent].left = current node id
+        // else nodes[parent].right = current node id
+        int node_id = add_node();
+
+        
+        if(!is_leaf){
+            // push splitted right node information on build_stack
+            build_stack.push({
+                parent:node_id,
+                is_left:0,
+                start:split.pos,
+                end:record.end,
+                depth:record.depth+1,
+                impurity:split.impurity_right
+            });
+
+            // push splitted left node information on build_stack
+            build_stack.push({
+                parent:node_id,
+                is_left:1,
+                start:record.start,
+                end:split.pos,
+                depth:record.depth+1,
+                impurity:split.impurity_left
+            });
+        }
+
+    }
+    
+}
+
+
 
 void generate_samples_index(int* samples, int dim0){
     for(int i=0; i<dim0; i++){
