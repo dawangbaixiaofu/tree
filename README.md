@@ -1,5 +1,4 @@
-core algorithms and data structure:
-
+**core algorithms and data structure**
 - quick sort
     sort samples along feature values
 - shuffle
