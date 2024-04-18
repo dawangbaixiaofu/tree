@@ -77,7 +77,7 @@ class DepthFirstTreeBuild{
     int* samples;
     
 
-    object X;
+    float X[100][10];
     float* y;
     
     void build();
@@ -96,17 +96,16 @@ void DepthFirstTreeBuild::node_split(StackRecord* record, SplitRecord* split, fl
     int n_features;
     int* features; // 0, 1, 2, ..., n_features-1
     
-
     int start = record->start;
     int end = record->end;
     float impurity = record->impurity;
     int random_subscript;
     int n_samples = (end-start);
-    float feature_values[n_samples][n_features];
+    float feature_value[n_samples];
+    int* features = new int[n_features];
     int* samples = new int[n_samples];
 
     SplitRecord best_record;
-
 
     random_device sd;
     mt19937 gen(sd());
@@ -115,12 +114,17 @@ void DepthFirstTreeBuild::node_split(StackRecord* record, SplitRecord* split, fl
         uniform_int_distribution<> dist(0, i);
         random_subscript = dist(gen);
         ::swap<int>(features[i], features[random_subscript]);
-        // generate features 
-
+        // generate features, reset feature_values 
+        for(int i=start; i<end; i++){
+            feature_value[i] = X[samples[i]][random_subscript];
+        }
         // sort feature and samples
-
+        ::qsort(feature_value, samples, start, end-1);
 
         // search best threshold
+        // refresh sum_total which holds impurity information and compute sum_left and sum_right
+        // seperatly to calculate information gain.
+        
 
 
     }   
@@ -303,7 +307,7 @@ void shuffle(int* samples, int dim0){
     mt19937 gen(sd());
     
     for(int j=dim0-1; j>0; j--){
-        uniform_int_distribution<> dist(0, j-1);
+        uniform_int_distribution<> dist(0, j);
         int random_index = dist(gen);
         ::swap<int>(samples[random_index], samples[j]);
     }
