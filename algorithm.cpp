@@ -83,13 +83,16 @@ class DepthFirstTreeBuild{
     void build();
     int add_node();
     void node_split(StackRecord* record, SplitRecord* split, float impurity);
+    void find_best_split(float* feature_value, int* samples, int start, int end, SplitRecord* best_split_record);
     float node_impurity(int* samples, int start, int end);
     void bfs();
     void dfs();
 };
 
 
+
 /////////////////////////////////////////////////////////////
+
 
 void DepthFirstTreeBuild::node_split(StackRecord* record, SplitRecord* split, float impurity){
     // find a best feature and corresponding threshold
@@ -101,11 +104,11 @@ void DepthFirstTreeBuild::node_split(StackRecord* record, SplitRecord* split, fl
     float impurity = record->impurity;
     int random_subscript;
     int n_samples = (end-start);
-    float feature_value[n_samples];
+    float* feature_value = new float[n_samples];
     int* features = new int[n_features];
     int* samples = new int[n_samples];
 
-    SplitRecord best_record;
+    SplitRecord best_split_record;
 
     random_device sd;
     mt19937 gen(sd());
@@ -119,20 +122,28 @@ void DepthFirstTreeBuild::node_split(StackRecord* record, SplitRecord* split, fl
             feature_value[i] = X[samples[i]][random_subscript];
         }
         // sort feature and samples
-        ::qsort(feature_value, samples, start, end-1);
+        ::qsort<float>(feature_value, samples, start, end);
 
         // search best threshold
         // refresh sum_total which holds impurity information and compute sum_left and sum_right
         // seperatly to calculate information gain.
+        find_best_split(feature_value, samples, start, end, &best_split_record);
         
 
 
     }   
-
-
-
 }
 
+
+void DepthFirstTreeBuild::find_best_split(float* feature_value, int* samples, int start, int end, SplitRecord* best_split_record){
+    // 
+    float cur_impurity;
+    float left_impurity, right_impurity;
+    float improvement;
+    float threshold;
+    
+     
+}
 
 
 
